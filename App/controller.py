@@ -84,3 +84,8 @@ def getMoviesByDirector(catalog, directorname):
 
     director_info= model.getMoviesByDirector(catalog,directorname)
     return director_info
+
+def getMoviesByActor(catalog,actorname):
+     actor_info= model.getMoviesByActor(catalog,actorname)
+     return actor_info
+

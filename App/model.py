@@ -64,8 +64,11 @@ def newCatalog():
     catalog['directors'] = mp.newMap(200,
                                    maptype='PROBING',
                                    loadfactor=0.5,
-                                   comparefunction=compareProducersByName)
-
+                                   comparefunction=compareDirectorsByName)
+    catalog['actor'] = mp.newMap(200,
+                                  maptype='PROBING',
+                                  loadfactor=0.5,
+                                  comparefunction=compareProducersByName)
     return catalog
 
 def compareProducersByName(keyname, producer):
@@ -93,7 +96,14 @@ def compareDirectorsByName(keyname, director):
         return 1
     else:
         return -1
-
+def CompareActorByName(keyname,actor):
+    authentry = me.getKey(actor)
+    if (keyname == authentry):
+        return 0
+    elif (keyname > authentry):
+        return 1
+    else:
+        return -1
 
 # Funciones para agregar informacion al catalogo
 
@@ -108,12 +118,7 @@ def addMovies(catalog, movie):
     mp.put(catalog['movieIds'], movie['production_companies'], movie)
 
 
-def addMovieProducer(catalog, producername, movie):
-    """
-    Esta función adiciona un libro a la lista de libros publicados
-    por un autor.
-    Cuando se adiciona el libro se actualiza el promedio de dicho autor
-    """
+def addMovieProducer(catalog, producername, movie):  
     producers = catalog['producers']
     existproducer = mp.contains(producers, producername)
     if existproducer:
@@ -132,11 +137,6 @@ def addMovieProducer(catalog, producername, movie):
         producer['vote_average'] = (authavg + float(movieavg)) / 2
 
 def addMovieDirector(catalog, directorname, movie):
-    """
-    Esta función adiciona un libro a la lista de libros publicados
-    por un autor.
-    Cuando se adiciona el libro se actualiza el promedio de dicho autor
-    """
     directors = catalog['directors']
     existdirector = mp.contains(directors, directorname)
     if existdirector:
@@ -173,27 +173,31 @@ def newProducer(name):
     producer['name'] = name
     producer['movies'] = lt.newList('SINGLE_LINKED', compareProducersByName)
     return producer
+    
+def newActor(name):
+    """
+    Crea una nueva estructura para modelar los libros de un autor
+    y su promedio de ratings
+    """
+    actor = {'name': "", "movies": None,  "vote_average": 0}
+    actor['name'] = name
+    actor['movies'] = lt.newList('SINGLE_LINKED', CompareActorByName)
+    return actor   
 # ==============================
 # Funciones de consulta
 # ==============================
 
 def moviesSize(catalog):
-    """
-    Número de libros en el catago
-    """
     return lt.size(catalog['movies'])
 
 def producersSize(catalog):
-    """
-    Número de libros en el catago
-    """
     return lt.size(catalog['producers'])
 
 def directorsSize(catalog):
-    """
-    Número de libros en el catago
-    """
     return lt.size(catalog['directors'])
+
+def actorsize(catalog):
+    return lt.size(catalog['actor'])
 # ==============================
 # Funciones de Comparacion
 # ==============================
@@ -227,4 +231,11 @@ def getMoviesByDirector(catalog, directorname):
     director = mp.get(catalog['directors'], directorname)
     if director:
         return me.getValue(director)
+    return None
+
+def getMoviesByActor(catalog, actorname):
+    
+    actor = mp.get(catalog['actor'], actorname)
+    if actor:
+        return me.getValue(actor)
     return None
