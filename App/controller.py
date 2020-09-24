@@ -53,10 +53,9 @@ def loadData(catalog, moviesfile, castingfile):
     """
     Carga los datos de los archivos en el modelo
     """
-    loadMovies(catalog, moviesfile)
-    loadCasting(catalog, castingfile)
+    loadMovies(catalog, moviesfile,castingfile)
 
-def loadMovies(catalog, moviesfile):
+def loadMovies(catalog, moviesfile, castingfile):
     """
     Carga cada una de las lineas del archivo de movies.
     - Se agrega cada movie al catalogo de movies
@@ -65,21 +64,24 @@ def loadMovies(catalog, moviesfile):
     """
     moviesfile = cf.data_dir + moviesfile
     input_file = csv.DictReader(open(moviesfile,encoding="utf-8-sig"),delimiter=";", quotechar='\"')
-    for movie in input_file:
+    castingfile = cf.data_dir +castingfile
+    input_file2 = csv.DictReader(open(castingfile,encoding="utf-8-sig"),delimiter=";")
+    for movie,casting in zip(input_file,input_file2):
         model.addMovies(catalog, movie)
         producers = movie['production_companies'].split(";")  # Se obtienen los autores
+        model.addCasting(catalog, casting)
+        directors = casting['director_name']
+        actors = [casting['actor1_name'],casting['actor2_name'],casting['actor3_name'],casting['actor4_name'],casting['actor5_name']]
+        genres = movie['genres'].split("|")
+        countries = movie["production_countries"]
         for productor in producers:
             model.addMovieProducer(catalog, productor, movie)
-            
-def loadCasting(catalog,castingfile):
-    """
-    Carga en el catalogo los tags a partir de la informacion
-    del archivo de etiquetas
-    """
-    castingfile = cf.data_dir +castingfile
-    input_file = csv.DictReader(open(castingfile,encoding="utf-8-sig"),delimiter=";")
-    for casting in input_file:
-        model.addCasting(catalog, casting)
+        model.addMovieDirector(catalog, directors, movie)
+        for actor in actors:
+            model.addMovieActor(catalog,actor,movie,directors)
+        for genre in genres:
+            model.addMoviegenre(catalog,genre,movie)
+        model.addMoviecountrie(catalog,countries,movie,directors)
 
 
 def moviesSize(catalog):
@@ -99,3 +101,9 @@ def getMoviesByActor(catalog,actorname):
      actor_info= model.getMoviesByActor(catalog,actorname)
      return actor_info
 
+def getMoviesBygenre(catalog,genrename):
+     genre_info= model.getMoviesBygenre(catalog,genrename)
+     return genre_info
+def getMoviesBycountrie(catalog,countriename):
+     countrie_info= model.getMoviesBycountrie(catalog,countriename)
+     return countrie_info

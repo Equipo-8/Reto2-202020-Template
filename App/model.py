@@ -52,7 +52,10 @@ def newCatalog():
                 'movieIds':None,
                 'directors':None,
                 'casting': None,
-                'castingID':None}
+                'castingID':None,
+                'actors':None,
+                'genres':None,
+                'countries':None}
 
     catalog['movies'] = lt.newList('SINGLE_LINKED', comparemovieIds)
     catalog['producers'] = mp.newMap(200,
@@ -67,10 +70,14 @@ def newCatalog():
                                    maptype='CHAINING',
                                    loadfactor=0.5,
                                    comparefunction=compareDirectorsByName)
-    catalog['actor'] = mp.newMap(200,
+    catalog['actors'] = mp.newMap(200,
                                   maptype='CHAINING',
                                   loadfactor=0.5,
-                                  comparefunction=compareProducersByName)
+                                  comparefunction=CompareActorByName)
+    catalog['countries'] = mp.newMap(200,
+                                  maptype='CHAINING',
+                                  loadfactor=0.5,
+                                  comparefunction=comparecountriesByName)
     catalog['casting'] = mp.newMap(1000,
                                 maptype='CHAINING',
                                 loadfactor=0.7,
@@ -79,6 +86,10 @@ def newCatalog():
                                   maptype='CHAINING',
                                   loadfactor=0.7,
                                   comparefunction=compareCastingIDS)
+    catalog['genres'] = mp.newMap(1000,
+                                  maptype='CHAINING',
+                                  loadfactor=0.7,
+                                  comparefunction=comparegenresByName)
     return catalog
 
 def compareProducersByName(keyname, producer):
@@ -93,6 +104,18 @@ def compareProducersByName(keyname, producer):
         return 1
     else:
         return -1
+def comparegenresByName(keyname, genre):
+    """
+    Compara dos nombres de autor. El primero es una cadena
+    y el segundo un entry de un map
+    """
+    authentry = me.getKey(genre)
+    if (keyname == authentry):
+        return 0
+    elif (keyname > authentry):
+        return 1
+    else:
+        return -1
 
 def compareDirectorsByName(keyname, director):
     """
@@ -100,6 +123,19 @@ def compareDirectorsByName(keyname, director):
     y el segundo un entry de un map
     """
     authentry = me.getKey(director)
+    if (keyname == authentry):
+        return 0
+    elif (keyname > authentry):
+        return 1
+    else:
+        return -1
+
+def comparecountriesByName(keyname, countrie):
+    """
+    Compara dos nombres de autor. El primero es una cadena
+    y el segundo un entry de un map
+    """
+    authentry = me.getKey(countrie)
     if (keyname == authentry):
         return 0
     elif (keyname > authentry):
@@ -174,6 +210,67 @@ def addMovieDirector(catalog, directorname, movie):
     else:
         director['vote_average'] = (authavg + float(movieavg)) / 2
 
+def addMoviecountrie(catalog, countriename, movie,director):
+    countries = catalog['countries']
+    existcountrie = mp.contains(countries, countriename)
+    if existcountrie:
+        entry = mp.get(countries, countriename)
+        countrie = me.getValue(entry)
+    else:
+        countrie = newcountrie(countriename)
+        mp.put(countries, countriename, countrie)
+    movie['director']=director
+    lt.addLast(countrie['movies'], movie)
+
+    authavg = countrie['vote_average']
+    movieavg = movie['vote_average']
+    if (authavg == 0.0):
+        countrie['vote_average'] = float(movieavg)
+    else:
+        countrie['vote_average'] = (authavg + float(movieavg)) / 2
+
+def addMoviegenre(catalog, genrename, movie):
+    genres = catalog['genres']
+    existgenre = mp.contains(genres, genrename)
+    if existgenre:
+        entry = mp.get(genres, genrename)
+        genre = me.getValue(entry)
+    else:
+        genre = newgenre(genrename)
+        mp.put(genres, genrename, genre)
+    lt.addLast(genre['movies'], movie)
+
+    authavg = genre['vote_average']
+    movieavg = movie['vote_average']
+    if (authavg == 0.0):
+        genre['vote_average'] = float(movieavg)
+    else:
+        genre['vote_average'] = (authavg + float(movieavg)) / 2
+
+def addMovieActor(catalog, actorname, movie, director):
+    actors = catalog['actors']
+    existactor = mp.contains(actors, actorname)
+    if existactor:
+        entry = mp.get(actors, actorname)
+        actor = me.getValue(entry)
+    else:
+        actor = newActor(actorname)
+        mp.put(actors, actorname, actor)
+    lt.addLast(actor['movies'], movie)
+    authavg = actor['vote_average']
+    movieavg = movie['vote_average']
+    if (authavg == 0.0):
+        actor['vote_average'] = float(movieavg)
+    else:
+        actor['vote_average'] = (authavg + float(movieavg)) / 2
+    if director in actor['director_collaborations']:
+        actor['director_collaborations'][director]+=1
+    else:
+        actor['director_collaborations'][director]=0
+    if actor['director_collaborations'][director]>actor["most"][1]:
+        actor["most"][0]=director
+        actor["most"][1]=actor['director_collaborations'][director]
+
 def newDirector(name):
     """
     Crea una nueva estructura para modelar los libros de un autor
@@ -183,6 +280,36 @@ def newDirector(name):
     director['name'] = name
     director['movies'] = lt.newList('SINGLE_LINKED', compareDirectorsByName)
     return director
+
+def newcountrie(name):
+    """
+    Crea una nueva estructura para modelar los libros de un autor
+    y su promedio de ratings
+    """
+    countrie = {'name': "", "movies": None,  "vote_average": 0}
+    countrie['name'] = name
+    countrie['movies'] = lt.newList('SINGLE_LINKED', comparecountriesByName)
+    return countrie
+
+def newgenre(name):
+    """
+    Crea una nueva estructura para modelar los libros de un autor
+    y su promedio de ratings
+    """
+    genre = {'name': "", "movies": None,  "vote_average": 0}
+    genre['name'] = name
+    genre['movies'] = lt.newList('SINGLE_LINKED', comparegenresByName)
+    return genre
+
+def newActor(name):
+    """
+    Crea una nueva estructura para modelar los libros de un autor
+    y su promedio de ratings
+    """
+    actor = {'name': "","movies": None, "vote_average": 0,"director_collaborations":{},"most":["None",0]}
+    actor['name'] = name
+    actor['movies'] = lt.newList('SINGLE_LINKED', compareActorsByName)
+    return actor
 
 def newProducer(name):
     """
@@ -194,16 +321,6 @@ def newProducer(name):
     producer['movies'] = lt.newList('SINGLE_LINKED', compareProducersByName)
     return producer
     
-def newActor(name):
-    """
-    Crea una nueva estructura para modelar los libros de un autor
-    y su promedio de ratings
-    """
-    actor = {'name': "", "movies": None,  "vote_average": 0}
-    actor['name'] = name
-    actor['movies'] = lt.newList('SINGLE_LINKED', CompareActorByName)
-    return actor   
-
 
 
 # ==============================
@@ -256,9 +373,20 @@ def getMoviesByDirector(catalog, directorname):
         return me.getValue(director)
     return None
 
-def getMoviesByActor(catalog, actorname):
+def getMoviesBygenre(catalog, genrename):
     
-    actor = mp.get(catalog['actor'], actorname)
+    genre = mp.get(catalog['genres'], genrename)
+    if genre:
+        return me.getValue(genre)
+    return None
+def getMoviesBycountrie(catalog, countriename):
+    
+    countrie = mp.get(catalog['countries'], countriename)
+    if countrie:
+        return me.getValue(countrie)
+    return None
+def getMoviesByActor(catalog, actorname):
+    actor = mp.get(catalog['actors'], actorname)
     if actor:
         return me.getValue(actor)
     return None
@@ -272,6 +400,14 @@ def compareCastingNames(name, tag):
     else:
         return -1
 
+def compareActorsByName(name, tag):
+    tagentry = me.getKey(tag)
+    if (name == tagentry):
+        return 0
+    elif (name > tagentry):
+        return 1
+    else:
+        return -1
 
 def compareCastingIDS(id, tag):
     tagentry = me.getKey(tag)
