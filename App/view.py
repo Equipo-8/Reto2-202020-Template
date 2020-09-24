@@ -40,8 +40,8 @@ operación seleccionada.
 # ___________________________________________________
 
 
-catalogfile = 'MoviesCastingRaw-small.csv'
-moviesfile = 'AllMoviesDetailsCleaned.csv'
+castingfile = 'MoviesCastingRaw-small.csv'
+moviesfile = 'SmallMoviesDetailsCleaned.csv'
 
 
 # ___________________________________________________
@@ -131,7 +131,7 @@ while True:
     elif int(inputs[0]) == 2:
         print("Cargando información de los archivos ....")
         t1_start = process_time() #tiempo inicial
-        controller.loadData(cont, moviesfile)
+        controller.loadData(cont, moviesfile, castingfile)
         t1_stop = process_time() #tiempo final
         print("Tiempo de ejecución ",t1_stop-t1_start," segundos")
         print('Películas cargadas: ' + str(controller.moviesSize(cont)))

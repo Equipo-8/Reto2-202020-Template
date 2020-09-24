@@ -49,12 +49,12 @@ def initCatalog():
 #  de datos en los modelos
 # ___________________________________________________
 
-def loadData(catalog, moviesfile):
+def loadData(catalog, moviesfile, castingfile):
     """
     Carga los datos de los archivos en el modelo
     """
     loadMovies(catalog, moviesfile)
-
+    loadCasting(catalog, castingfile)
 
 def loadMovies(catalog, moviesfile):
     """
@@ -71,6 +71,16 @@ def loadMovies(catalog, moviesfile):
         for productor in producers:
             model.addMovieProducer(catalog, productor, movie)
             
+def loadCasting(catalog,castingfile):
+    """
+    Carga en el catalogo los tags a partir de la informacion
+    del archivo de etiquetas
+    """
+    castingfile = cf.data_dir +castingfile
+    input_file = csv.DictReader(open(castingfile,encoding="utf-8-sig"),delimiter=";")
+    for casting in input_file:
+        model.addCasting(catalog, casting)
+
 
 def moviesSize(catalog):
     return model.moviesSize(catalog)

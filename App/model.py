@@ -50,25 +50,35 @@ def newCatalog():
     catalog = {'producers': None,
                 'movies': None,
                 'movieIds':None,
-                'directors':None}
+                'directors':None,
+                'casting': None,
+                'castingID':None}
 
     catalog['movies'] = lt.newList('SINGLE_LINKED', comparemovieIds)
     catalog['producers'] = mp.newMap(200,
-                                   maptype='PROBING',
+                                   maptype='CHAINING',
                                    loadfactor=0.5,
                                    comparefunction=compareProducersByName)
     catalog['movieIds'] = mp.newMap(1000,
-                                  maptype='PROBING',
+                                  maptype='CHAINING',
                                   loadfactor=0.5,
                                   comparefunction=compareProducersByName)
     catalog['directors'] = mp.newMap(200,
-                                   maptype='PROBING',
+                                   maptype='CHAINING',
                                    loadfactor=0.5,
                                    comparefunction=compareDirectorsByName)
     catalog['actor'] = mp.newMap(200,
-                                  maptype='PROBING',
+                                  maptype='CHAINING',
                                   loadfactor=0.5,
                                   comparefunction=compareProducersByName)
+    catalog['casting'] = mp.newMap(1000,
+                                maptype='CHAINING',
+                                loadfactor=0.7,
+                                comparefunction=compareCastingNames)
+    catalog['castingID'] = mp.newMap(1000,
+                                  maptype='CHAINING',
+                                  loadfactor=0.7,
+                                  comparefunction=compareCastingIDS)
     return catalog
 
 def compareProducersByName(keyname, producer):
@@ -116,6 +126,16 @@ def addMovies(catalog, movie):
     """
     lt.addLast(catalog['movies'], movie)
     mp.put(catalog['movieIds'], movie['production_companies'], movie)
+
+def addCasting(catalog, casting):
+    """
+    Esta funcion adiciona un libro a la lista de libros,
+    adicionalmente lo guarda en un Map usando como llave su Id.
+    Finalmente crea una entrada en el Map de años, para indicar que este
+    libro fue publicaco en ese año.
+    """
+    lt.addLast(catalog['casting'], casting)
+    mp.put(catalog['castingID'], casting['id'], casting)
 
 
 def addMovieProducer(catalog, producername, movie):  
@@ -183,6 +203,9 @@ def newActor(name):
     actor['name'] = name
     actor['movies'] = lt.newList('SINGLE_LINKED', CompareActorByName)
     return actor   
+
+
+
 # ==============================
 # Funciones de consulta
 # ==============================
@@ -239,3 +262,41 @@ def getMoviesByActor(catalog, actorname):
     if actor:
         return me.getValue(actor)
     return None
+
+def compareCastingNames(name, tag):
+    tagentry = me.getKey(tag)
+    if (name == tagentry):
+        return 0
+    elif (name > tagentry):
+        return 1
+    else:
+        return -1
+
+
+def compareCastingIDS(id, tag):
+    tagentry = me.getKey(tag)
+    if (int(id) == int(tagentry)):
+        return 0
+    elif (int(id) > int(tagentry)):
+        return 1
+    else:
+        return 0
+
+def addMovieCasting(catalog, tag):
+    """
+    Agrega una relación entre un libro y un tag.
+    Para ello se adiciona el libro a la lista de libros
+    del tag.
+    """
+    bookid = tag['goodreads_book_id']
+    tagid = tag['tag_id']
+    entry = mp.get(catalog['tagIds'], tagid)
+
+    if entry:
+        tagbook = mp.get(catalog['tags'], me.getValue(entry)['name'])
+        tagbook['value']['total_books'] += 1
+        tagbook['value']['count'] += int(tag['count'])
+        book = mp.get(catalog['bookIds'], bookid)
+        if book:
+            lt.addLast(tagbook['value']['books'], book['value'])
+
