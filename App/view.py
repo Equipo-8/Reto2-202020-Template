@@ -41,7 +41,11 @@ operación seleccionada.
 
 
 catalogfile = 'MoviesCastingRaw-small.csv'
+<<<<<<< Updated upstream
 moviesfile = 'AllMoviesDetailsCleaned.csv'
+=======
+moviesfile = 'SmallMoviesDetailsCleaned.csv'
+>>>>>>> Stashed changes
 
 
 # ___________________________________________________
