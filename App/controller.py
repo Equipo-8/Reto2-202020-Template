@@ -73,13 +73,19 @@ def loadMovies(catalog, moviesfile):
             
 
 def moviesSize(catalog):
-    """Numero de libros leido
-    """
     return model.moviesSize(catalog)
 
 def getMoviesByProducer(catalog, producername):
-    """
-    Retorna los libros de un autor
-    """
+    
     producerinfo = model.getMoviesByProducer(catalog, producername)
     return producerinfo
+
+def getMoviesByDirector(catalog, directorname):
+
+    director_info= model.getMoviesByDirector(catalog,directorname)
+    return director_info
+
+def getMoviesByActor(catalog,actorname):
+     actor_info= model.getMoviesByActor(catalog,actorname)
+     return actor_info
+

@@ -52,14 +52,25 @@ moviesfile = 'AllMoviesDetailsCleaned.csv'
 
 
 def printMoviesByProducer(producer):
-    """
-    Imprime los libros de un autor determinado
-    """
+    
     if producer:
         print('Productor encontrado: ' + producer['name'])
         print('Promedio: ' + str(producer['vote_average']))
         print('Total de películas: ' + str(lt.size(producer['movies'])))
         iterator = it.newIterator(producer['movies'])
+        while it.hasNext(iterator):
+            book = it.next(iterator)
+            print('Titulo: ' + book['original_title'] + '  Id: ' + book['id'])
+    else:
+        print('No se encontro el autor')
+
+def printMoviesByDirector(director):
+    
+    if director:
+        print('Director encontrado: ' + director['name'])
+        print('Promedio: ' + str(director['vote_average']))
+        print('Total de películas: ' + str(lt.size(director['movies'])))
+        iterator = it.newIterator(director['movies'])
         while it.hasNext(iterator):
             book = it.next(iterator)
             print('Titulo: ' + book['original_title'] + '  Id: ' + book['id'])
@@ -132,6 +143,15 @@ while True:
         t2_stop = process_time() #tiempo final
         print("Tiempo de ejecución ",t2_stop-t2_start," segundos")
         printMoviesByProducer(moviesproductor)
+
+    elif int(inputs[0]) == 4:
+        directorname=input("Buscando películas de director?: ")
+        t3_start=process_time()#tiempo inicial
+        movies_director= controller.getMoviesByDirector(cont,directorname)
+        t3_stop = process_time() #tiempo final
+        print("Tiempo de ejecución ",t3_stop-t3_start," segundos")
+        printMoviesByDirector(movies_director)
+
     else:
         sys.exit(0)
 sys.exit(0)
