@@ -115,7 +115,7 @@ def addMovies(catalog, movie):
     libro fue publicaco en ese año.
     """
     lt.addLast(catalog['movies'], movie)
-    mp.put(catalog['movieIds'], movie['id'], movie)
+    mp.put(catalog['movieIds'], movie['production_companies'], movie)
 
 
 def addMovieProducer(catalog, producername, movie):  
@@ -136,17 +136,6 @@ def addMovieProducer(catalog, producername, movie):
     else:
         producer['vote_average'] = (authavg + float(movieavg)) / 2
 
-<<<<<<< HEAD
-def addMovieDirector(catalog, tag):
-    """
-    Agrega una relación entre un libro y un tag.
-    Para ello se adiciona el libro a la lista de libros
-    del tag.
-    """
-    bookid = tag['goodreads_book_id']
-    tagid = tag['tag_id']
-    entry = mp.get(catalog['tagIds'], tagid)
-=======
 def addMovieDirector(catalog, directorname, movie):
     directors = catalog['directors']
     existdirector = mp.contains(directors, directorname)
@@ -157,15 +146,13 @@ def addMovieDirector(catalog, directorname, movie):
         director = newDirector(directorname)
         mp.put(directors, directorname, director)
     lt.addLast(director['movies'], movie)
->>>>>>> 0c8ca211d9eaa7c4017164ef6936f305d3944132
 
-    if entry:
-        tagbook = mp.get(catalog['tags'], me.getValue(entry)['name'])
-        tagbook['value']['total_books'] += 1
-        tagbook['value']['count'] += int(tag['count'])
-        book = mp.get(catalog['bookIds'], bookid)
-        if book:
-            lt.addLast(tagbook['value']['books'], book['value'])
+    authavg = director['vote_average']
+    movieavg = movie['vote_average']
+    if (authavg == 0.0):
+        director['vote_average'] = float(movieavg)
+    else:
+        director['vote_average'] = (authavg + float(movieavg)) / 2
 
 def newDirector(name):
     """
@@ -246,25 +233,9 @@ def getMoviesByDirector(catalog, directorname):
         return me.getValue(director)
     return None
 
-<<<<<<< HEAD
-
-
-
-
-
-
-
-
-diccionario1={"dinero":50000,"nombre":"jorge"}
-diccionario2={"dinero":20000,"nombre":"carlos"}
-
-diccionario1["dinero"]+=1000
-print(diccionario1["dinero"])
-=======
 def getMoviesByActor(catalog, actorname):
     
     actor = mp.get(catalog['actor'], actorname)
     if actor:
         return me.getValue(actor)
     return None
->>>>>>> 0c8ca211d9eaa7c4017164ef6936f305d3944132
